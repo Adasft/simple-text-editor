@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      box-sizing: border-box;
+    }
+    body {
+      height: 100vh;
+    }
+    .container {
+      /* margin-top: 100px; */
+      margin-bottom: 300px;
+      width: 1000px;
+      height: 400px;
+      background: #fafafa;
+      box-shadow: 0 0 0 1px rgb(0 0 0 / 30%);
+      /* user-select: ; */
+    }
+    .content {
+      inline-size: max-content;
+      /* width: 100%; */
+      /* width: 700px; */
+      /* height: 2000px; */
+    }
+
+    .s {
+      position: relative;
+      /* width: min-content; */
+      /* height: 1000px; */
+      /* background: rgb(0 0 0 / 20%); */
+      /* inline-size: min-content; */
+      /* text-indent:; */
+    }
+
+    .item {
+      position: absolute;
+      /* width: 700px; */
+      /* height: 30px; */
+      /* background: #666; */
+      color: #222;
+      font-family: consolas;
+      /* border-bottom: 1px solid rgb(0 0 0 / 20%); */
+    }
+
+    .a {
+      /* position:absolute; */
+      top: 500px;
+      left: 400px;
+      background: green;
+      width: 50px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div class="a"></div>
+  <!-- <div class="container">
+    <div class="content">
+      <div class="s">
+      </div>
+    </div>
+  </div> -->
+  <script src="../../build/bundle.js"></script>
+  <script src="./text.js"></script>
+  <script>
+    const { Scrollbars, RenderedView, css, createElement } = TextEditor
+
+    const renderView = createElement('div', {
+      attrs: { class: 's' }
+    })
+
+    const scroller = createElement('div', {
+      attrs: { class: 'content' }
+    }, renderView)
+
+    const view = createElement('div', {
+      attrs: { class: 'container' }
+    }, scroller)
+
+    document.body.appendChild(view)
+
+
+    const canvas = document.createElement('canvas')
+
+    const addTop = (refTop, ...items)  => {
+      // let accumalate = 0
+      for(const item of items) {
+        // item.top = accumalate
+        // item.top = 
+        css({ top: item.getTop() }).from(item.element)
+        // accumalate += refTop + item.height
+      }
+    }
+
+    function getTextWidth(text, font){
+      const ctx = canvas.getContext('2d')
+      ctx.font = font
+      return ctx.measureText(text).width
+    }
+
+    const list = [] 
+    let r;
+    const rendered = document.querySelector('.s')
+    function init(code, fontSize, lineHeight) {
+      const elementHeight = fontSize * lineHeight
+      const lines = code.split('\n')
+
+      
+    
+      
+      // const lines = []
+
+      // for(let i = 0; i<100_000; i++) {
+      //   lines.push(Math.random())
+      // }
+
+      const width = getTextWidth(lines.reduce((a,b) => a.length > b.length ? a : b), `${fontSize}px consolas`)
+      css({ height: lines.length * elementHeight, width }).from(scroller)
+      // css({ height: lines.length * elementHeight, width }).from(rendered.parentNode)
+      let prevSibling = null
+      for(const line of lines) {
+        const element = document.createElement('div')
+        const pre = document.createElement('pre')
+        pre.textContent = line
+        element.classList.add('item')
+        element.appendChild(pre)
+        css({ fontSize, lineHeight: String(lineHeight), height: elementHeight }).from(element)
+        // console.log(element.clientWidth)
+        const item = {
+          element,
+          height: elementHeight, 
+          top: 0, 
+          isRendered: false,
+          prevSibling,
+          getTop(index) {
+            let top = 0
+            if(typeof index === 'number') top = this.height * index
+            else if(this.prevSibling) {
+              top = this.prevSibling.top + this.prevSibling.height
+            }
+            // console.log({ element, top })
+            this.top = top
+            css({ top: this.top }).from(this.element)
+            return top
+          }
+        }
+        list.push(item)
+        prevSibling = item
+        // rendered.appendChild(element)
+      }
+      // console.log(elementHeight)
+      // addTop(scroll.movement, ...list)
+      // console.log(scroll.movement)
+      
+
+
+      // scroll.attachEvent('say', (s, b) => {
+      //   console.log(s.message, b)
+      // })
+      // // let last = 0
+      // const a = document.querySelector('.a')
+      // // scroll.moveWithScrollTo(a)
+      // Scroll.on(scroll, 'scroll', (s) => {
+      //   // console.log(s.movement)
+      //   // console.log('si')
+      //   r.dynamicInjectionOfItems(s.movement, s.direction)
+      //   // if(s.scrollPos === Scroll.Pos.START) {
+      //   //   console.log('hola')
+      //   //   renderedView.render(s.movement, s.direction,s)
+      //   // }
+      //   scroll.emitEvent('say', { message: 'hola mundo' }, 'JAJAJ')
+      // })
+
+      // Scroll.on(scroll, 'start', (s) => {
+      //   console.log(last)
+      //   renderedView.render(s.movement, s.direction,last, s)
+      // })
+    }
+
+    init(code, 15, 1.5)
+
+    const wrapper = Scrollbars.Wrapper({
+      view,
+      scroller,
+      verticalScrollOptions: {
+        // alwaysThumbVisibility: true, alwaysTrackVisibility: true, hover
+        // paddingTrack: 10, // bg, border-radius, border, box-shadow, cursor
+        // alwayVisibility: true,
+        overshadowTime: 0.5,
+        // trackAlwaysVisible: true,
+        
+        // styles: {
+        //   track: {
+        //     borderRadius: 50
+        //   }
+        // },
+        trackClickBehavior: 'jump'
+        // thumbAlwaysVisible: true,
+        // width: 20,
+        // height: 300
+      }
+      // horizontalScrollOptions: {
+      //   styles: {
+      //     track: {
+      //       borderRadius: 50
+      //     }
+      //   }
+      // }
+    }).append()
+
+    const { vertical: scroll } = wrapper.scrollbars
+
+
+    r = new RenderedView({
+        view: scroll.view,
+        rendered: scroll.scroller,
+        list,
+        offsetTop: scroll.movement,
+        itemHeight: 22.5,
+        scroll
+      })
+    // const content = document.querySelector('.s')
+    // const children = content.children
+    // const removes = []
+    // let index = 0
+    // let accumulate = 0, top1 = 0
+    // Array.from(children).forEach(element => {
+    //   element.style.top = `${top1}px`
+    //   top1 += 30
+    // })
+    // // scroll.moveTo(...children)
+    // Scroll.on(scroll, 'scrolling', s => {
+    //   // console.log({a: children[index].getBoundingClientRect().bottom, t: s.target.getBoundingClientRect().top - 30})
+    //   console.log('hola')
+    //   Array.from(children).forEach(element => {
+    //     if( element.getBoundingClientRect().bottom < s.target.getBoundingClientRect().top - 30) {
+    //       // removes.push(children[index])
+    //       element.remove()
+    //       // children[index].
+    //     } else {
+    //       // removes.length && content.insertAdjacentElement('afterbegin',removes.pop())
+    //     }
+    //   })
+    // })
+    // Scroll.on(scroll, 'scrolling', (s) => {
+    //   accumulate =  accumulate - s.movement;
+    //   // console.log(accumulate)
+    //   // console.log(children[index].getBoundingClientRect())
+    //   if(children[index].getBoundingClientRect().bottom  < s.target.getBoundingClientRect().top - 30) {
+    //     // removes.push(children[index])
+    //     // children[index].remove()
+    //     // console.log('hola')
+    //     // console.log()
+    //     // console.log(children[index])
+    //   } else {
+    //     console.log('no')
+    //     // removes.length && content.insertAdjacentElement('afterbegin',removes.pop())
+    //   }
+    //   Array.from(children).forEach(element => {
+    //     // console.log(element)
+    //     // console.log(parseInt(element.style.top.length ? element.style.top : 0))
+    //     element.style.top = `${parseInt(element.style.top.length ? element.style.top : 0) - accumulate}px`
+    //     // accumulate += 30
+    //   });
+    //   // console.log(content.offsetHeight - s.movement)
+    //   accumulate = s.movement
+    // })
+  </script>
+</body>
+</html>
